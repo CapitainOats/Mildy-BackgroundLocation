@@ -46,4 +46,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     // FusedLocation API (compile, target sdk's should be at least 28)
     implementation 'com.google.android.gms:play-services-location:17.1.0'
+
+    // Work Manager
+    implementation "androidx.work:work-runtime:2.5.0"
 }
