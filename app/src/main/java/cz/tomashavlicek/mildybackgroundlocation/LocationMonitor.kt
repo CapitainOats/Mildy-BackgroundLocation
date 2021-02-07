@@ -18,14 +18,20 @@ import java.util.concurrent.TimeUnit
 const val LOCATION_UPDATE = 100
 const val TAG = "LocationMonitor"
 
+private const val KEY_ACTION = "action"
+private const val ACTION_REGISTER = "register"
+private const val ACTION_UNREGISTER = "unregister"
+
 /**
- * 1. Schedule periodic location updates on specific time in the futrue
+ * 1. Schedule periodic location updates on specific time in the future
  * 2. Receive periodic location updates.
  *
  * Created by filip.fyrbach on 06.02.2021.
  */
-class LocationMonitor(appContext: Context,
-                      workerParams: WorkerParameters)
+class LocationMonitor(
+    appContext: Context,
+    workerParams: WorkerParameters
+)
     : Worker(appContext, workerParams) {
 
     private val mFusedLocationProvider: FusedLocationProviderClient =
@@ -34,7 +40,7 @@ class LocationMonitor(appContext: Context,
 
     companion object {
 
-        fun run(context: Context) {
+        fun register(context: Context) {
             // Uz jsme scheduler spustili a uspesne jsme nastavili polsuchac na location updates
             if (isWorkSucceeded(context)) {
                 Log.d(TAG, "Already successfully scheduled.")
@@ -47,9 +53,26 @@ class LocationMonitor(appContext: Context,
                 .setRequiresCharging(false)
                 .build()
 
+            val inputData = Data.Builder()
+                .putString(KEY_ACTION, ACTION_REGISTER)
+                .build()
+
             val work = OneTimeWorkRequest.Builder(LocationMonitor::class.java)
-                .setInitialDelay(60 * 1000, TimeUnit.MILLISECONDS)
+                .setInitialDelay(getInitialDelay(), TimeUnit.MILLISECONDS)
+                .setInputData(inputData)
                 .setConstraints(constraints)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(TAG, ExistingWorkPolicy.KEEP, work)
+        }
+
+        fun unregister(context: Context) {
+            val inputData = Data.Builder()
+                .putString(KEY_ACTION, ACTION_UNREGISTER)
+                .build()
+
+            val work = OneTimeWorkRequest.Builder(LocationMonitor::class.java)
+                .setInputData(inputData)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(TAG, ExistingWorkPolicy.KEEP, work)
@@ -75,12 +98,12 @@ class LocationMonitor(appContext: Context,
             }
         }
 
-        private fun getInitialDelay(hourOfDay: Int = 19): Long {
+        private fun getInitialDelay(hourOfDay: Int = 20): Long {
             val current: Long = System.currentTimeMillis()
 
             val calendar = Calendar.getInstance()
             calendar[Calendar.HOUR_OF_DAY] = hourOfDay
-            calendar[Calendar.MINUTE] = 0
+            calendar[Calendar.MINUTE] = 30
             calendar[Calendar.SECOND] = 0
             calendar[Calendar.MILLISECOND] = 0
 
@@ -89,29 +112,35 @@ class LocationMonitor(appContext: Context,
                 calendar.add(Calendar.HOUR, 24)
             }
 
-            return calendar.timeInMillis
+            val delay: Long = calendar.timeInMillis - current
+            Log.d(TAG, calendar.toString() + "\n" + delay / 1000 / 60)
+
+            return calendar.timeInMillis - current
         }
     }
 
     override fun doWork(): Result {
-        return startTrackingLocation()
+        val action = inputData.getString(KEY_ACTION) ?: return Result.failure()
+
+        if (action == ACTION_REGISTER) {
+            return startTrackingLocation()
+        } else if (action == ACTION_UNREGISTER) {
+            val locationUpdatePendingIntent = createLocationUpdatePendingIntent()
+            mFusedLocationProvider.removeLocationUpdates(locationUpdatePendingIntent)
+            return Result.success()
+        }
+
+        return Result.success()
     }
 
     @SuppressLint("MissingPermission")
     private fun startTrackingLocation(): Result {
-        val locationUpdateIntent = Intent(applicationContext, LocationUpdateReceiver::class.java)
-        val locationUpdatePendingIntent = PendingIntent.getBroadcast(
-            applicationContext,
-            LOCATION_UPDATE,
-            locationUpdateIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
         if (!permissionHelper.hasLocationPermission(applicationContext, false)) {
             Log.d(TAG, "Not sufficient permissions for tracking location.")
             return Result.failure()
         }
 
+        val locationUpdatePendingIntent = createLocationUpdatePendingIntent()
         mFusedLocationProvider.requestLocationUpdates(
             getLocationRequest(),
             locationUpdatePendingIntent
@@ -121,14 +150,24 @@ class LocationMonitor(appContext: Context,
         return Result.success()
     }
 
+    private fun createLocationUpdatePendingIntent(): PendingIntent {
+        val locationUpdateIntent = Intent(applicationContext, LocationUpdateReceiver::class.java)
+        return PendingIntent.getBroadcast(
+            applicationContext,
+            LOCATION_UPDATE,
+            locationUpdateIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+    }
+
     /**
      * Sets up the location request.
      *
      * @return The LocationRequest object containing the desired parameters.
      */
     private fun getLocationRequest() = LocationRequest().apply {
-        interval = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES)
-        fastestInterval = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)
+        interval = TimeUnit.MILLISECONDS.convert(24, TimeUnit.HOURS)
+        fastestInterval = TimeUnit.MILLISECONDS.convert(24, TimeUnit.HOURS)
         priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
     }
 }

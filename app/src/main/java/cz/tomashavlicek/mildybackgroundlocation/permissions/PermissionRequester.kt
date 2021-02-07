@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.PermissionChecker.PERMISSION_DENIED
 import androidx.fragment.app.Fragment
-import java.lang.ref.WeakReference
 
 /**
  * Class to request and handle runtime permissions.
