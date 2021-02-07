@@ -22,7 +22,7 @@ const val WEATHER_ALERT_NOTIFICATION_ID = 10001
 /**
  * Manager starajici se o Notifikace. Singleton.
  */
-object NotificationManagerHelper {
+object NotificationHelper {
 
     enum class NotificationChannelType(
         val channelId: String,
@@ -50,14 +50,15 @@ object NotificationManagerHelper {
         }
     }
 
+    private val context: Context = App.context
+
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerToChannels(App.context)
+            registerToChannels(context)
         }
     }
 
     val breakingNewsNotificationBuilder: NotificationCompat.Builder get() {
-        val context: Context = App.context
         val builder = NotificationCompat.Builder(
             context,
             NotificationChannelType.CHANNEL_WEATHER_ALERT.channelId

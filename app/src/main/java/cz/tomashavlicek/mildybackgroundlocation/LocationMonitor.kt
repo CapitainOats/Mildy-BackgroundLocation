@@ -48,7 +48,7 @@ class LocationMonitor(appContext: Context,
                 .build()
 
             val work = OneTimeWorkRequest.Builder(LocationMonitor::class.java)
-                .setInitialDelay(getInitialDelay(), TimeUnit.MILLISECONDS)
+                .setInitialDelay(60 * 1000, TimeUnit.MILLISECONDS)
                 .setConstraints(constraints)
                 .build()
 
@@ -127,8 +127,8 @@ class LocationMonitor(appContext: Context,
      * @return The LocationRequest object containing the desired parameters.
      */
     private fun getLocationRequest() = LocationRequest().apply {
-        interval = TimeUnit.MILLISECONDS.convert(24, TimeUnit.HOURS)
-        fastestInterval = TimeUnit.MILLISECONDS.convert(24, TimeUnit.HOURS)
+        interval = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES)
+        fastestInterval = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)
         priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
     }
 }

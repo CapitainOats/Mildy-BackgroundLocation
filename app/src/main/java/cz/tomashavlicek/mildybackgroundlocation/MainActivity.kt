@@ -2,15 +2,18 @@ package cz.tomashavlicek.mildybackgroundlocation
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import cz.tomashavlicek.mildybackgroundlocation.permissions.PermissionHelper
 
 class MainActivity : AppCompatActivity() {
 
     private val REQUEST_LOCATION_PERMISSION = 1
+    private val permissionHelper: PermissionHelper = PermissionHelper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,9 +29,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doLocationPermissions() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+        if (!permissionHelper.hasLocationPermission(this, true)) {
+            val permissions = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+            else arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
+            ActivityCompat.requestPermissions(this,
+                permissions,
                 REQUEST_LOCATION_PERMISSION
             )
         }
