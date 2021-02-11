@@ -5,4 +5,10 @@
 
     <!-- Notifications -->
     <string name="channel_weather_alert">Počasí ve vašem místě</string>
+
+    <!--Permissions -->
+    <string name="permission_denied_forever_dialog_positive">Nastavení</string>
+    <string name="permission_denied_forever_dialog_neutral">Zrušit</string>
+    <string name="permission_denied_forever_dialog_body">K používání aplikace je zapotřebí povolit přístup k lokaci.</string>
+
 </resources>

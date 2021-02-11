@@ -8,7 +8,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.LocationResult
-import cz.tomashavlicek.mildybackgroundlocation.notifications.NotificationManagerHelper
+import cz.tomashavlicek.mildybackgroundlocation.notifications.NotificationHelper
 import cz.tomashavlicek.mildybackgroundlocation.notifications.WEATHER_ALERT_NOTIFICATION_ID
 
 class LocationUpdateReceiver : BroadcastReceiver() {
@@ -28,7 +28,7 @@ class LocationUpdateReceiver : BroadcastReceiver() {
 
             Log.d(TAG, text)
 
-            val notificationBuilder: NotificationCompat.Builder = NotificationManagerHelper.breakingNewsNotificationBuilder
+            val notificationBuilder: NotificationCompat.Builder = NotificationHelper.breakingNewsNotificationBuilder
 
             // Creating an intent for the notification
             val intent = Intent(context, MainActivity::class.java)
